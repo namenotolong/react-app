@@ -1,5 +1,6 @@
 import { Button, Tabs } from 'antd';
 import { useRef, useState } from 'react';
+import Left from './Left'
 const defaultPanes = new Array(2).fill(null).map((_, index) => {
     const id = String(index + 1);
     return {
@@ -21,7 +22,7 @@ const Right = () => {
             ...items,
             {
                 label: 'New Tab',
-                children: 'New Tab Pane',
+                children: <Left></Left>,
                 key: newActiveKey,
             },
         ]);
@@ -53,13 +54,7 @@ const Right = () => {
                 onEdit={onEdit}
                 items={items}
             />
-            <div
-                style={{
-                    marginBottom: 16,
-                }}
-            >
-                <Button onClick={add}>ADD</Button>
-            </div>
+            <Button onClick={add}>ADD</Button>
         </div>
     );
 };
