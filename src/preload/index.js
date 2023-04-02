@@ -1,7 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import { fetchData, fetchTotalConns, showDatabases, showTables } from './Database'
-import  {registerLister, sendEvent} from './MessageEvent'
 
 // Custom APIs for renderer
 const api = {}
@@ -16,10 +15,6 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('api', api)
     contextBridge.exposeInMainWorld('database', {
       fetchData, fetchTotalConns, showDatabases, showTables
-    })
-    contextBridge.exposeInMainWorld('mq', {
-      registerLister, sendEvent,
-      TABLE_CLICK_EVENT: 'tableClickEvent',
     })
   } catch (error) {
     console.error(error)
