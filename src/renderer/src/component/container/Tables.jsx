@@ -1,15 +1,15 @@
 import { List } from 'antd';
 import { useState } from 'react';
-import { InsertRowAboveOutlined, PlusSquareOutlined, CloseCircleOutlined, FolderOpenOutlined, FormOutlined } from '@ant-design/icons';
+import { InsertRowAboveOutlined, PlusSquareOutlined, CloseCircleOutlined, FolderOpenOutlined, FormOutlined, TableOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 
 const App = props => {
     const [focurs, setFocurs] = useState(false);
     const [activeIndex, setActiveIndex] = useState(null);
-    const [clickIndex, setClickIndex] = useState(null);
+    const [clickTable, setClickTable] = useState(null);
 
-    const handleClick = index => {
-        setClickIndex(index);
+    const handleClick = item => {
+        setClickTable(item);
         setFocurs(true)
     };
     const handleMouseEnter = index => setActiveIndex(index);
@@ -43,39 +43,43 @@ const App = props => {
     const onItemClick = e => {
         console.log(e)
     }
+    
     return (
         <div>
             <div style={{ marginLeft: 5 }}>
-                <Button disabled={!focurs}>
+                <Button disabled={!focurs} onClick={() => {
+                    //console.log(props.tabs)
+                    props.handleHeaderButtonClickEvent('open', clickTable.name, props.params)
+                }}>
                     <FolderOpenOutlined /> 打开表
                 </Button>
                 {str}
-                <Button disabled={!focurs}>
+                <Button disabled={!focurs} onClick={() => props.handleHeaderButtonClickEvent('desgin', clickTable.name, props.params)}>
                     <FormOutlined /> 设计表
                 </Button>
                 {str}
-                <Button >
+                <Button onClick={() => props.handleHeaderButtonClickEvent('create', clickTable.name, props.params)}>
                     <PlusSquareOutlined /> 新建表
                 </Button>
                 {str}
-                <Button disabled={!focurs}>
-                    <CloseCircleOutlined /> 删除表
+                <Button disabled={!focurs} onClick={() => props.handleHeaderButtonClickEvent('query', clickTable.name, props.params)}>
+                    <TableOutlined /> 查询
                 </Button>
             </div>
-            <div style={{ display: 'flex', marginLeft: 5,marginTop: 10 }}>
+            <div style={{ display: 'flex', marginLeft: 5, marginTop: 10 }}>
                 {pageData.map((item, index) => (
-                    <div key={index} style={{ marginRight: 20, marginLeft: 10}}>
+                    <div key={index} style={{ marginRight: 20, marginLeft: 10 }}>
                         <List dataSource={item} renderItem={(item) => {
                             const isActive = item.id === activeIndex;
-                            const isFocus = item.id === clickIndex;
+                            const isFocus = clickTable == null ? false : item.id === clickTable.id;
                             return (<List.Item
                                 key={item.id}
-                                onClick={() => handleClick(item.id)}
+                                onClick={() => handleClick(item)}
                                 onMouseEnter={() => handleMouseEnter(item.id)}
                                 onMouseLeave={handleMouseLeave}
                                 style={{
-                                    background: isFocus ? 'rgb(7,128,216)' : isActive ? 'rgb(245,245,245)' : 'transparent',
-                                    color: isFocus ? 'white' : 'black'
+                                    background: isActive ? 'rgb(245,245,245)' : 'transparent',
+                                    color: isFocus ? 'rgb(7,128,216)' : 'black'
                                 }}
                             >
                                 <InsertRowAboveOutlined />{str}{item.name}

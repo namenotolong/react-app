@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import "../../css/container/container.css";
 import Left from './Left'
-import {Tabs } from 'antd';
+import { Tabs } from 'antd';
 import Tables from './Tables'
+import TableQuery from './TableQuery'
 
 export default function App() {
     const [leftWidth, setLeftWidth] = useState("20%");
@@ -36,14 +37,17 @@ export default function App() {
             setActiveKey(newTabName);
         } else {
             const data = await window.database.showTables(e);
-            setItems([
+            const obj = [
                 ...items,
                 {
                     label: e.database + '@tables',
-                    children: <Tables data={data}/>,
+                    children: <Tables data={data} params={e} handleHeaderButtonClickEvent={handleHeaderButtonClickEvent} />,
                     key: newTabName,
                 },
-            ]);
+            ]
+            setItems(obj);
+            window.constant.setTabs(obj)
+            console.log( window.constant.getTabs())
             setActiveKey(newTabName);
         }
     }
@@ -59,6 +63,7 @@ export default function App() {
             setActiveKey(key);
         }
         setItems(newPanes);
+        window.constant.setTabs(newPanes)
     };
     const onEdit = (targetKey, action) => {
         if (action === 'add') {
@@ -68,10 +73,38 @@ export default function App() {
         }
     };
 
+    /**
+     * 库表列表header点击事件
+     */
+    const handleHeaderButtonClickEvent = (eventType, tableName, params) => {
+        if (!eventType) {
+            return
+        }
+        let newTabName = null;
+        switch (eventType) {
+            case 'open': {
+                newTabName = params.name + "_query" + "_" + window.constant.getCounter();
+                const temp = [
+                    ... window.constant.getTabs(),
+                    {
+                        label: params.name + '@查询',
+                        children: <TableQuery params={params} tableName={tableName} database={params.database}/>,
+                        key: newTabName,
+                    },
+                ];
+                setItems(temp);
+                window.constant.setTabs(temp)
+                setActiveKey(newTabName);
+            }
+            break
+        }
+        window.constant.increatCounter()
+    }
+
     return (
         <div className="container" onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
             <div className="left" style={{ width: leftWidth }}>
-                <Left clickDatabase={clickDatabase}></Left>
+                <Left clickDatabase={clickDatabase} items={items}></Left>
             </div>
             <div className="drag-handle" onMouseDown={handleMouseDown} />
             <div className="right" style={{ width: `calc(100% - ${leftWidth})` }}>

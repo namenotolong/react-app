@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import { fetchData, fetchTotalConns, showDatabases, showTables } from './Database'
+import {getTabs, setTabs, increatCounter, getCounter} from './Constant'
 
 // Custom APIs for renderer
 const api = {}
@@ -15,6 +16,9 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('api', api)
     contextBridge.exposeInMainWorld('database', {
       fetchData, fetchTotalConns, showDatabases, showTables
+    })
+    contextBridge.exposeInMainWorld('constant', {
+      getTabs, setTabs, increatCounter, getCounter
     })
   } catch (error) {
     console.error(error)
