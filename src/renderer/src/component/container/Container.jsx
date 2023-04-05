@@ -4,6 +4,7 @@ import Left from './Left'
 import { Tabs } from 'antd';
 import Tables from './Tables'
 import TableQuery from './TableQuery'
+import Test from './test'
 
 export default function App() {
     const [leftWidth, setLeftWidth] = useState("20%");
@@ -47,7 +48,6 @@ export default function App() {
             ]
             setItems(obj);
             window.constant.setTabs(obj)
-            console.log( window.constant.getTabs())
             setActiveKey(newTabName);
         }
     }
@@ -81,22 +81,38 @@ export default function App() {
             return
         }
         let newTabName = null;
+        let temp = null;
         switch (eventType) {
-            case 'open': {
+            case 'query': {
                 newTabName = params.name + "_query" + "_" + window.constant.getCounter();
-                const temp = [
-                    ... window.constant.getTabs(),
+                temp = [
+                    ...window.constant.getTabs(),
                     {
                         label: params.name + '@查询',
-                        children: <TableQuery params={params} tableName={tableName} database={params.database}/>,
+                        children: <TableQuery params={params} tableName={tableName} database={params.database} />,
                         key: newTabName,
                     },
                 ];
-                setItems(temp);
-                window.constant.setTabs(temp)
-                setActiveKey(newTabName);
             }
-            break
+                break;
+            case 'open': {
+                newTabName = params.name + "_query" + "_" + window.constant.getCounter();
+                temp = [
+                    ...window.constant.getTabs(),
+                    {
+                        label: params.name + '@' + tableName + '(' + params.database + ')',
+                        children: <Test params={params} tableName={tableName} />,
+                        key: newTabName,
+                    },
+                ];
+
+            }
+                break;
+        }
+        if (newTabName && temp) {
+            setItems(temp);
+            window.constant.setTabs(temp)
+            setActiveKey(newTabName);
         }
         window.constant.increatCounter()
     }

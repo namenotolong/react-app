@@ -48,7 +48,6 @@ const App = props => {
         <div>
             <div style={{ marginLeft: 5 }}>
                 <Button disabled={!focurs} onClick={() => {
-                    //console.log(props.tabs)
                     props.handleHeaderButtonClickEvent('open', clickTable.name, props.params)
                 }}>
                     <FolderOpenOutlined /> 打开表

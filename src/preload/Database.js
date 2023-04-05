@@ -49,11 +49,11 @@ class ParseFieldInfo {
     }
     static parsePostgreSQL(fields) {
         return fields.map(e =>
-            ({ 'name': e.name, 'type': this.postgreFieldMap.get(e.dataTypeID) })
+            ({ 'dataIndex': e.name, 'type': this.postgreFieldMap.get(e.dataTypeID), 'title': e.name, 'key': e.name })
         )
     }
     static parseMySQL(fields) {
-        return fields.map(e => ({ 'name': e.name, 'type': mysql.Types[e.type] }))
+        return fields.map(e => ({ 'dataIndex': e.name, 'type': mysql.Types[e.type], 'title': e.name, 'key': e.name }))
     }
 }
 class ConnPostgreSQL extends DatabaseConn {
