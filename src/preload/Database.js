@@ -20,6 +20,10 @@ class DatabaseConn {
         throw new Error("Method 'run' must be implemented");
     }
 
+    async query(sql) {
+        throw new Error("Method 'query' must be implemented");
+    }
+
     async listDatabases() {
         throw new Error("Method 'listDatabases' must be implemented");
     }
@@ -78,6 +82,18 @@ class ConnPostgreSQL extends DatabaseConn {
                 if (err) {
                     reject(err);
                 } else {
+                    resolve("Changed: " + res.rowCount)
+                }
+            });
+        });
+    }
+
+    async query(sql) {
+        return await new Promise((resolve, reject) => {
+            this.client.query(sql, (err, res) => {
+                if (err) {
+                    reject(err);
+                } else {
                     resolve(new Result(ParseFieldInfo.parsePostgreSQL(res.fields), res.rows));
                 }
             });
@@ -122,6 +138,18 @@ class ConnMySQL extends ConnPostgreSQL {
     }
 
     async run(sql) {
+        return await new Promise((resolve, reject) => {
+            this.connection.query(sql, (error, results, fields) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(results.message);
+                }
+            });
+        });
+    }
+
+    async query(sql) {
         return await new Promise((resolve, reject) => {
             this.connection.query(sql, (error, results, fields) => {
                 if (error) {
@@ -179,6 +207,13 @@ function createConnection(connParams) {
 
 async function fetchData(sql, connParams) {
     let databaseConn = createConnection(connParams);
+    const result = await databaseConn.query(sql);
+    databaseConn.disconnect();
+    return result;
+}
+
+async function executeSql(sql, connParams) {
+    let databaseConn = createConnection(connParams);
     const result = await databaseConn.run(sql);
     databaseConn.disconnect();
     return result;
@@ -222,4 +257,4 @@ async function showTables(connParams) {
     return result;
 }
 
-export { fetchData, fetchTotalConns, showDatabases, showTables }
+export { fetchData, fetchTotalConns, showDatabases, showTables, executeSql }

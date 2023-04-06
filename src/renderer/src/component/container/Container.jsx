@@ -4,7 +4,7 @@ import Left from './Left'
 import { Tabs } from 'antd';
 import Tables from './Tables'
 import TableQuery from './TableQuery'
-import Test from './test'
+import Test from './TableDetailContainer'
 
 export default function App() {
     const [leftWidth, setLeftWidth] = useState("20%");
