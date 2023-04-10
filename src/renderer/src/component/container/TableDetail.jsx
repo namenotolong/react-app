@@ -1,5 +1,6 @@
-import { Form, Popconfirm, Table, Typography, Input } from 'antd';
+import { Form, Popconfirm, Table, Typography, Input, Button, Space } from 'antd';
 import { useState } from 'react';
+import { LoadingOutlined } from '@ant-design/icons';
 const EditableCell = ({
     editing,
     dataIndex,
@@ -39,6 +40,10 @@ const App = props => {
     const [data, setData] = useState(props.tableDetail.data);
     const [editingKey, setEditingKey] = useState('');
     const isEditing = (record) => record._______key === editingKey;
+    const [result, setResult] = useState("")
+    const [running, setRunning] = useState(false)
+    const [condition, setCondition] = useState(false)
+    const [conditionValue, setConditionValue] = useState("")
     const edit = (record) => {
         form.setFieldsValue(record);
         setEditingKey(record._______key);
@@ -69,20 +74,27 @@ const App = props => {
             }
             sql = sql.substring(0, sql.lastIndexOf("and"));
             console.log(sql)
+            setRunning(true)
             const result = await window.database.executeSql(sql, props.params)
             console.log(result)
+            setResult(result)
             const index = data.findIndex((item) => item._______key === record._______key);
             row._______key = record._______key;
-            data[index] = row;
-            console.log(data)
+            for (const key in row) {
+                if (Object.hasOwnProperty.call(row, key)) {
+                    const element = row[key];
+                    data[index][key] = element
+                }
+            }
             setData(data);
             setEditingKey('');
         } catch (errInfo) {
             console.log('Validate Failed:', errInfo);
         }
+        setRunning(false)
     };
-    const handleDelete = data => {
-        console.log(data)
+    const handleDelete = row => {
+        setData(data.filter(e => e._______key != row._______key));
     }
     const columns = [
         ...props.tableDetail.columns,
@@ -114,7 +126,7 @@ const App = props => {
                             disabled={editingKey !== ''} onClick={() => edit(record)}>
                             Edit
                         </Typography.Link>
-                        <Popconfirm title="Sure to delete?" onConfirm={() => handleDelete(record.key)}>
+                        <Popconfirm title="Sure to delete?" onConfirm={() => handleDelete(record)}>
                             <a>Delete</a>
                         </Popconfirm>
                     </span>
@@ -136,24 +148,70 @@ const App = props => {
             }),
         };
     });
+
+    const doQuery = () => {
+        console.log(`select * from ${props.tableName} where ${conditionValue}`)
+    }
+    const refresh = () => {
+
+    }
+    const addRow = () => {
+        const temp = {
+            id: 1,
+            name: 'add',
+            _______key: '12321322'
+        }
+        setData([
+            ...data, temp
+        ])
+    }
     return (
-        <Form form={form} component={false}>
-            <Table
-                components={{
-                    body: {
-                        cell: EditableCell,
-                    },
-                }}
-                bordered
-                dataSource={data}
-                columns={mergedColumns}
-                rowClassName="editable-row"
-                pagination={{
-                    onChange: cancel,
-                }}
-                rowKey={e => e._______key}
-            />
-        </Form>
+        <div>
+            <div style={{ marginLeft: 5 }}>
+                <Space>
+                    <Button type='primary' onClick={addRow}>添加数据</Button>
+                    <Button type='primary' onClick={refresh}>刷新</Button>
+                    <Button type='primary' onClick={e => setCondition(true)}>添加条件</Button>
+                </Space>
+            </div>
+
+            <div style={{ marginLeft: 5, marginTop: 3 }}>
+                {condition ? (
+                    <Space.Compact block>
+                        <Input
+                            style={{
+                                width: '100%',
+                            }}
+                            value={conditionValue}
+                            onChange={e => setConditionValue(e.target.value)}
+                        />
+                        <Button type="primary" onClick={doQuery}>查询</Button>
+                    </Space.Compact>
+                ) : ("")}
+            </div>
+            <div style={{ marginTop: 5 }}>
+                <Form form={form} component={false}>
+                    <Table
+                        components={{
+                            body: {
+                                cell: EditableCell,
+                            },
+                        }}
+                        bordered
+                        dataSource={data}
+                        columns={mergedColumns}
+                        rowClassName="editable-row"
+                        pagination={{
+                            onChange: cancel,
+                        }}
+                        rowKey={e => e._______key}
+                    />
+                </Form>
+            </div>
+            <div style={{ marginTop: 20, marginLeft: 5 }}>
+                {running ? (<LoadingOutlined />) : (result)}
+            </div>
+        </div>
     );
 };
 export default App;

@@ -1,4 +1,4 @@
-import { Form, Popconfirm, Typography, Spin } from 'antd';
+import { Spin } from 'antd';
 import { useState, useEffect } from 'react';
 import TableDetailApp from './TableDetail'
 
@@ -47,9 +47,9 @@ const App = props => {
 
     return (
         <div>
-            <div style={{ marginTop: 20 }}>
+            <div style={{ marginTop: 2 }}>
                 {!loading ? (
-                    <div style={{ marginTop: 20, textAlign: 'center' }}>
+                    <div style={{ marginTop: 2, textAlign: 'center' }}>
                         <Spin></Spin>
                     </div>
                 ) : queryError ? (
@@ -57,7 +57,7 @@ const App = props => {
                         {errorMsg}
                     </div>
                 ) : tableDetail ? (
-                    <div style={{ marginTop: 20 }}>
+                    <div style={{ marginTop: 2 }}>
                         <TableDetailApp tableDetail={tableDetail} tableName={props.tableName} params={props.params}></TableDetailApp>
                     </div>
                 ) : ''}
