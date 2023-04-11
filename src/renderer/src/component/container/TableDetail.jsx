@@ -1,8 +1,11 @@
-import { Form, Popconfirm, Table, Typography, Input, Button, Space } from 'antd';
+import { Form, Popconfirm, Table, Typography, Input, Button, Space, InputNumber, DatePicker } from 'antd';
 import { useState } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
+import { dateFormatTest } from '../utils/DateUtils'
+import Test from './test'
 const EditableCell = ({
     editing,
+    type,
     dataIndex,
     title,
     inputType,
@@ -11,15 +14,20 @@ const EditableCell = ({
     children,
     ...restProps
 }) => {
-    const inputNode = <Input />;
+    let inputNode;
+    switch (type) {
+        case 'long':
+        case 'int':
+        case 'int4':
+        case 'int8': inputNode = <InputNumber />; break;
+        case 'date': <DatePicker />; break;
+        default: inputNode = <Input />; break
+    }
     return (
         <td {...restProps}>
             {editing ? (
                 <Form.Item
                     name={dataIndex}
-                    style={{
-                        margin: 0,
-                    }}
                     rules={[
                         {
                             required: true,
@@ -93,8 +101,9 @@ const App = props => {
         }
         setRunning(false)
     };
-    const handleDelete = row => {
+    const handleDelete = async row => {
         setData(data.filter(e => e._______key != row._______key));
+        let sql = `delete from ${props.tableName} limit 1`
     }
     const columns = [
         ...props.tableDetail.columns,
@@ -138,6 +147,21 @@ const App = props => {
         if (!col.editable) {
             return col;
         }
+        col.render = text => {
+            let type = col.type;
+            if (!type) {
+                return text;
+            }
+            type = type.toLowerCase()
+            let res;
+            switch (type) {
+                case "date": res = dateFormatTest("YYYY-mm-dd", text); break;
+                case "datetime": res = dateFormatTest("YYYY-mm-dd HH:MM:SS", text); break;
+                case "timestamp": res = dateFormatTest("YYYY-mm-dd HH:MM:SS", text); break;
+                default: res = text + ""
+            }
+            return res;
+        }
         return {
             ...col,
             onCell: (record) => ({
@@ -145,17 +169,51 @@ const App = props => {
                 dataIndex: col.dataIndex,
                 title: col.title,
                 editing: isEditing(record),
+                type: col.type.toLowerCase()
             }),
         };
     });
 
-    const doQuery = () => {
-        console.log(`select * from ${props.tableName} where ${conditionValue}`)
+    function processResult(result) {
+        let count = 1
+        if (result.data && result.data.length > 0) {
+            result.data = result.data.map(e => {
+                e._______key = count
+                count = count + 1
+                return e;
+            })
+        }
+        return result.data;
     }
-    const refresh = () => {
 
+    const doQuery = async () => {
+        try {
+            let sql;
+            if (conditionValue && conditionValue.trim()) {
+                sql = `select * from ${props.tableName} where ${conditionValue}`
+            } else {
+                sql = `select * from ${props.tableName}`
+            }
+            setRunning(true)
+            const result = await window.database.fetchData(sql, props.params)
+            setData(processResult(result))
+        } catch (err) {
+            console.log(`query happen error ${err}`)
+        }
+        setRunning(false)
     }
-    const addRow = () => {
+    const refresh = async () => {
+        try {
+            setRunning(true)
+            let sql = `select * from ${props.tableName}`
+            const result = await window.database.fetchData(sql, props.params)
+            setData(processResult(result))
+        } catch (err) {
+            console.log(`query happen error ${err}`)
+        }
+        setRunning(false)
+    }
+    const addRow = async () => {
         const temp = {
             id: 1,
             name: 'add',
@@ -211,6 +269,7 @@ const App = props => {
             <div style={{ marginTop: 20, marginLeft: 5 }}>
                 {running ? (<LoadingOutlined />) : (result)}
             </div>
+            <Test></Test>
         </div>
     );
 };

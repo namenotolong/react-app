@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Select, Space, Button, Input, Table, Spin } from 'antd';
 import { CaretRightOutlined } from '@ant-design/icons';
+import {dateFormatTest} from '../utils/DateUtils'
 const { TextArea } = Input;
 const app = props => {
     const database = props.database;
@@ -38,6 +39,7 @@ const app = props => {
         setInit(true)
     }
     async function querySql() {
+        console.log(123)
         if (!selectedItem || !textValue) {
             return
         }
@@ -55,6 +57,26 @@ const app = props => {
                         count = count + 1
                         return e;
                     })
+                }
+                if (result.columns && result.columns.length > 0) {
+                    result.columns = result.columns.map((col) => {
+                        col.render = text => {
+                            let type = col.type;
+                            if (!type) {
+                                return text;
+                            }
+                            type = type.toLowerCase()
+                            let res;
+                            switch (type) {
+                                case "date": res = dateFormatTest("YYYY-mm-dd", text); break;
+                                case "datetime": res = dateFormatTest("YYYY-mm-dd HH:MM:SS", text); break;
+                                case "timestamp": res = dateFormatTest("YYYY-mm-dd HH:MM:SS", text); break;
+                                default: res = text + ""
+                            }
+                            return res;
+                        }
+                        return col;
+                    });
                 }
                 setResult(result)
                 setLoading(false)

@@ -1,12 +1,15 @@
 import { List } from 'antd';
 import { useState } from 'react';
-import { InsertRowAboveOutlined, PlusSquareOutlined, CloseCircleOutlined, FolderOpenOutlined, FormOutlined, TableOutlined } from '@ant-design/icons';
+import { InsertRowAboveOutlined, PlusSquareOutlined, RedoOutlined, FolderOpenOutlined, FormOutlined, TableOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 
 const App = props => {
     const [focurs, setFocurs] = useState(false);
     const [activeIndex, setActiveIndex] = useState(null);
     const [clickTable, setClickTable] = useState(null);
+    const [data, setData] = useState(props.data.map((e, index) => {
+        return { 'name': e, 'id': index };
+    }))
 
     const handleClick = item => {
         setClickTable(item);
@@ -16,10 +19,6 @@ const App = props => {
     const handleMouseLeave = () => {
         setActiveIndex(null)
     }
-
-    let data = props.data.map((e, index) => {
-        return { 'name': e, 'id': index };
-    })
 
     // 每页最多显示4列
     const PAGE_SIZE = 3;
@@ -43,7 +42,7 @@ const App = props => {
     const onItemClick = e => {
         console.log(e)
     }
-    
+
     return (
         <div>
             <div style={{ marginLeft: 5 }}>
@@ -63,6 +62,19 @@ const App = props => {
                 {str}
                 <Button disabled={!focurs} onClick={() => props.handleHeaderButtonClickEvent('query', clickTable.name, props.params)}>
                     <TableOutlined /> 查询
+                </Button>
+                {str}
+                <Button onClick={async () => {
+                    const itemData = await window.database.showTables(props.params);
+                    if (itemData && itemData.length > 0) {
+                        setData(itemData.map((e, index) => {
+                            return { 'name': e, 'id': index };
+                        }))
+                    } else {
+                        setData([])
+                    }
+                }}>
+                    <RedoOutlined /> 刷新
                 </Button>
             </div>
             <div style={{ display: 'flex', marginLeft: 5, marginTop: 10 }}>
