@@ -1,7 +1,7 @@
 import { Spin } from 'antd';
 import { useState, useEffect } from 'react';
-// import TableDetailApp from './TableDetail'
-import TableDetailTest from './TableDetailCp'
+import TableDetailApp from './TableDetail'
+// import TableDetailTest from './TableDetailCp'
 
 
 const App = props => {
@@ -59,8 +59,8 @@ const App = props => {
                     </div>
                 ) : tableDetail ? (
                     <div style={{ marginTop: 2 }}>
-                        {/* <TableDetailApp tableDetail={tableDetail} tableName={props.tableName} params={props.params}></TableDetailApp> */}
-                        <TableDetailTest tableDetail={tableDetail} tableName={props.tableName} params={props.params}></TableDetailTest>
+                        <TableDetailApp tableDetail={tableDetail} tableName={props.tableName} params={props.params}></TableDetailApp>
+                        {/* <TableDetailTest tableDetail={tableDetail} tableName={props.tableName} params={props.params}></TableDetailTest> */}
                     </div>
                 ) : ''}
             </div>

@@ -1,8 +1,10 @@
-import { Form, Popconfirm, Table, Typography, Input, Button, Space, InputNumber, DatePicker } from 'antd';
+import { Form, Popconfirm, Table, Typography, Input, Button, Space, InputNumber, DatePicker, ConfigProvider, TimePicker } from 'antd';
 import { useState } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
 import { dateFormatTest } from '../utils/DateUtils'
-import Test from './test'
+import locale from 'antd/locale/zh_CN';
+import dayjs from 'dayjs';
+import 'dayjs/locale/zh-cn';
 const EditableCell = ({
     editing,
     type,
@@ -20,7 +22,45 @@ const EditableCell = ({
         case 'int':
         case 'int4':
         case 'int8': inputNode = <InputNumber />; break;
-        case 'date': <DatePicker />; break;
+        case 'date': {
+            if (record[title]) {
+                inputNode = <DatePicker locale={locale} defaultValue={dayjs(dateFormatTest("YYYY-mm-dd", record[title]), 'YYYY-MM-DD')} />
+            } else {
+                inputNode = <DatePicker locale={locale} />
+            }
+        }; break;
+        case 'datetime':
+        case 'timestamp':
+            {
+                if (record[title]) {
+                    inputNode = (
+                        <DatePicker locale={locale} format="YYYY-MM-DD HH:mm:ss" defaultValue={dayjs(dateFormatTest("YYYY-mm-dd HH:MM:SS", record[title]), 'YYYY-MM-DD HH:mm:ss')}
+                            showTime={{
+                                defaultValue: dayjs(dateFormatTest("HH:MM:SS", record[title]), 'HH:mm:ss'),
+                            }}
+                        />
+                    )
+                } else {
+                    inputNode = (
+                        <DatePicker locale={locale}  format="YYYY-MM-DD HH:mm:ss"
+                            showTime={{
+                                defaultValue: dayjs('00:00:00', 'HH:mm:ss'),
+                            }}
+                        />
+                    )
+                }
+            } break;
+        case 'time': {
+            if (record[title]) {
+                inputNode = (
+                    <TimePicker locale={locale} defaultValue={dayjs(record[title], 'HH:mm:ss')} />
+                )
+            } else {
+                inputNode = (
+                    <TimePicker locale={locale} />
+                )
+            }
+        }; break;
         default: inputNode = <Input />; break
     }
     return (
@@ -28,12 +68,6 @@ const EditableCell = ({
             {editing ? (
                 <Form.Item
                     name={dataIndex}
-                    rules={[
-                        {
-                            required: true,
-                            message: `Please Input ${title}!`,
-                        },
-                    ]}
                 >
                     {inputNode}
                 </Form.Item>
@@ -56,48 +90,58 @@ const App = props => {
         form.setFieldsValue(record);
         setEditingKey(record._______key);
     };
-    const cancel = () => {
+    const cancel = record => {
         setEditingKey('');
+        if (record._______commit_none) {
+            setData(data.filter(e => e._______key != record._______key));
+        }
     };
     const save = async (record) => {
-        try {
+        if (record._______commit_none) {
+            //insert
             const row = await form.validateFields();
-            let sql = `update ${props.tableName} set `
-            for (const key in row) {
-                if (Object.hasOwnProperty.call(row, key)) {
-                    const element = row[key];
-                    sql = sql + `${key} = '${element}', `
+            console.log(row)
+        } else {
+            //update
+            try {
+                const row = await form.validateFields();
+                let sql = `update ${props.tableName} set `
+                for (const key in row) {
+                    if (Object.hasOwnProperty.call(row, key)) {
+                        const element = row[key];
+                        sql = sql + `${key} = '${element}', `
+                    }
                 }
+                sql = sql.substring(0, sql.lastIndexOf(","));
+                sql = sql + ' where ';
+                for (const key in record) {
+                    if (key === '_______key') {
+                        continue;
+                    }
+                    if (Object.hasOwnProperty.call(record, key)) {
+                        const element = record[key];
+                        sql = sql + `${key} = '${element}' and `
+                    }
+                }
+                sql = sql.substring(0, sql.lastIndexOf("and"));
+                console.log(sql)
+                setRunning(true)
+                const result = await window.database.executeSql(sql, props.params)
+                console.log(result)
+                setResult(result)
+                const index = data.findIndex((item) => item._______key === record._______key);
+                row._______key = record._______key;
+                for (const key in row) {
+                    if (Object.hasOwnProperty.call(row, key)) {
+                        const element = row[key];
+                        data[index][key] = element
+                    }
+                }
+                setData(data);
+                setEditingKey('');
+            } catch (errInfo) {
+                console.log('Validate Failed:', errInfo);
             }
-            sql = sql.substring(0, sql.lastIndexOf(","));
-            sql = sql + ' where ';
-            for (const key in record) {
-                if (key === '_______key') {
-                    continue;
-                }
-                if (Object.hasOwnProperty.call(record, key)) {
-                    const element = record[key];
-                    sql = sql + `${key} = '${element}' and `
-                }
-            }
-            sql = sql.substring(0, sql.lastIndexOf("and"));
-            console.log(sql)
-            setRunning(true)
-            const result = await window.database.executeSql(sql, props.params)
-            console.log(result)
-            setResult(result)
-            const index = data.findIndex((item) => item._______key === record._______key);
-            row._______key = record._______key;
-            for (const key in row) {
-                if (Object.hasOwnProperty.call(row, key)) {
-                    const element = row[key];
-                    data[index][key] = element
-                }
-            }
-            setData(data);
-            setEditingKey('');
-        } catch (errInfo) {
-            console.log('Validate Failed:', errInfo);
         }
         setRunning(false)
     };
@@ -122,7 +166,7 @@ const App = props => {
                         >
                             Save
                         </Typography.Link>
-                        <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
+                        <Popconfirm title="Sure to cancel?" onConfirm={() => cancel(record)}>
                             <a>Cancel</a>
                         </Popconfirm>
                     </span>
@@ -158,6 +202,7 @@ const App = props => {
                 case "date": res = dateFormatTest("YYYY-mm-dd", text); break;
                 case "datetime": res = dateFormatTest("YYYY-mm-dd HH:MM:SS", text); break;
                 case "timestamp": res = dateFormatTest("YYYY-mm-dd HH:MM:SS", text); break;
+                // case 'time': res = dateFormatTest("HH:MM:SS", text); break;
                 default: res = text + ""
             }
             return res;
@@ -214,20 +259,22 @@ const App = props => {
         setRunning(false)
     }
     const addRow = async () => {
-        const temp = {
-            id: 1,
-            name: 'add',
-            _______key: '12321322'
+        let addRowData = {}
+        for (const iterator of columns) {
+            addRowData[iterator.title] = null
         }
+        addRowData._______key = crypto.randomUUID()
+        addRowData._______commit_none = true
         setData([
-            ...data, temp
+            ...data, addRowData
         ])
+        setEditingKey(addRowData._______key);
     }
     return (
         <div>
             <div style={{ marginLeft: 5 }}>
                 <Space>
-                    <Button type='primary' onClick={addRow}>添加数据</Button>
+                    <Button type='primary' onClick={addRow} disabled={editingKey}>添加数据</Button>
                     <Button type='primary' onClick={refresh}>刷新</Button>
                     <Button type='primary' onClick={e => setCondition(true)}>添加条件</Button>
                 </Space>
@@ -248,7 +295,8 @@ const App = props => {
                 ) : ("")}
             </div>
             <div style={{ marginTop: 5 }}>
-                <Form form={form} component={false}>
+                <Form form={form}
+                    component={false}>
                     <Table
                         components={{
                             body: {
@@ -269,7 +317,6 @@ const App = props => {
             <div style={{ marginTop: 20, marginLeft: 5 }}>
                 {running ? (<LoadingOutlined />) : (result)}
             </div>
-            <Test></Test>
         </div>
     );
 };

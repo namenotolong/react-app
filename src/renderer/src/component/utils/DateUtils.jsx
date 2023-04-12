@@ -1,4 +1,7 @@
 function dateFormatTest(fmt, date) {
+    if (!date) {
+        return null;
+    }
     let ret;
     date = new Date(date)
     const opt = {
