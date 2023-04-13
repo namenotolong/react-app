@@ -2,12 +2,12 @@ import { Form, Popconfirm, Table, Typography, Input, Button, Space, InputNumber,
 import { useState } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
 import { dateFormatTest } from '../utils/DateCommonUtils'
-import locale from 'antd/es/date-picker/locale/zh_CN';
 import dayjs from 'dayjs';
-import 'dayjs/locale/zh-cn';
 
 const dateFormat = 'YYYY-MM-DD';
 const dateUtilsFormat = 'YYYY-mm-dd'
+const datetimeUtilsFormat = 'YYYY-mm-dd HH:MM:SS'
+
 
 const EditableCell = ({
     editing,
@@ -26,60 +26,27 @@ const EditableCell = ({
         case 'int':
         case 'int4':
         case 'int8': {
-            if (record[title]) {
-                inputNode = <InputNumber defaultValue={record[title]} />
-            } else {
-                inputNode = <InputNumber />
-            }
+            inputNode = <InputNumber />
         } break;
         case 'date': {
-            if (record[title]) {
-                inputNode = <DatePicker defaultValue={dayjs(dateFormatTest(dateUtilsFormat, record[title]), dateFormat)} />;
-            } else {
-                inputNode = <DatePicker />;
-            }
+            inputNode = <DatePicker />;
         }; break;
         case 'datetime':
         case 'timestamp':
-            {
-                if (record[title]) {
-                    inputNode = (
-                        <DatePicker locale={locale}
-                            format="YYYY-MM-DD HH:mm:ss"
-                            defaultValue={dayjs(dateFormatTest("YYYY-mm-dd HH:MM:SS", record[title]), 'YYYY-MM-DD HH:mm:ss')}
-                            showTime={{
-                                defaultValue: dayjs(dateFormatTest("HH:MM:SS", record[title]), 'HH:mm:ss'),
-                            }}
-                        />
-                    )
-                } else {
-                    inputNode = (
-                        <DatePicker locale={locale} format="YYYY-MM-DD HH:mm:ss"
-                            showTime={{
-                                defaultValue: dayjs('00:00:00', 'HH:mm:ss'),
-                            }}
-                        />
-                    )
-                }
-            } break;
+            inputNode = (
+                <DatePicker
+                    showTime={{
+                        defaultValue: dayjs('00:00:00', 'HH:mm:ss'),
+                    }}
+                />
+            ); break;
         case 'time': {
-            if (record[title]) {
-                inputNode = (
-                    <TimePicker locale={locale} defaultValue={dayjs(record[title], 'HH:mm:ss')} />
-                )
-            } else {
-                inputNode = (
-                    <TimePicker locale={locale} />
-                )
-            }
+            inputNode = (
+                <TimePicker />
+            )
         }; break;
         default: {
-            if (record && record[title]) {
-                inputNode = <Input defaultValue={record[title]} />
-            } else {
-                inputNode = <Input />
-            }
-
+            inputNode = <Input />
         }; break
     }
     return (
@@ -180,7 +147,23 @@ const App = props => {
     });
 
     const edit = (record) => {
-        // form.setFieldsValue(record);
+        let temp = { ...record }
+        for (const key in temp) {
+            if (Object.hasOwnProperty.call(temp, key) && columnTypeMap.has(key)) {
+                const element = temp[key];
+                const type = columnTypeMap.get(key).toLowerCase()
+                let res;
+                switch (type) {
+                    case 'date': res = dayjs(dateFormatTest(dateUtilsFormat, element), 'YYYY-MM-DD'); break
+                    case 'datetime':
+                    case 'timestamp': res = dayjs(dateFormatTest(datetimeUtilsFormat, element), 'YYYY-MM-DD HH:mm:ss'); break;
+                    case 'time': res = dayjs(element, 'HH:mm:ss'); break;
+                    default: res = element;
+                }
+                temp[key] = res
+            }
+        }
+        form.setFieldsValue(temp);
         setEditingKey(record._______key);
     };
     const cancel = record => {
@@ -191,30 +174,23 @@ const App = props => {
     };
     const save = async (record) => {
         const row = await form.validateFields();
-        console.log(row)
-        console.log(columnTypeMap)
-        let temp = {...row}
+
+        let temp = { ...row }
         for (const key in temp) {
-            if (Object.hasOwnProperty.call(temp, key)) {
+            if (Object.hasOwnProperty.call(temp, key) && columnTypeMap.has(key)) {
                 const element = temp[key];
-                console.log(key + ":" + element + ":" + columnTypeMap.get(key))
+                const type = columnTypeMap.get(key).toLowerCase()
+                let res;
+                switch (type) {
+                    case 'date': res = dayjs(element).format('YYYY-MM-DD'); break
+                    case 'datetime':
+                    case 'timestamp': res = dayjs(element).format('YYYY-MM-DD HH:mm:ss'); break;
+                    case 'time': res = dayjs(element).format('HH:mm:ss'); break;
+                    default: res = element;
+                }
+                console.log(key + ":" + element + ":" + columnTypeMap.get(key) + ":" + res)
             }
         }
-        // for (const key in temp) {
-        //     if (Object.hasOwnProperty.call(temp, key)) {
-        //         const element = temp[key];
-        //         const type = columnTypeMap.get(key).toLowerCase()
-        //         let res;
-        //         switch (type) {
-        //             case 'date': res = dayjs(element, 'YYYY-MM-DD');break
-        //             case 'datetime':
-        //             case 'timestamp': res = dayjs(element, 'YYYY-MM-DD HH:mm:ss');break;
-        //             case 'time': res = dayjs(element, 'HH:mm:ss');break;
-        //             default: res = element;
-        //         }
-        //         console.log(key + ":" + element + ":" + columnTypeMap.get(key) + ":" + res)
-        //     }
-        // }
         return
         if (record._______commit_none) {
             //insert
@@ -268,7 +244,7 @@ const App = props => {
         setData(data.filter(e => e._______key != row._______key));
         let sql = `delete from ${props.tableName} limit 1`
     }
-    
+
 
     function processResult(result) {
         let count = 1
