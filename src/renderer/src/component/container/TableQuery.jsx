@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Select, Space, Button, Input, Table, Spin } from 'antd';
 import { CaretRightOutlined } from '@ant-design/icons';
-import {dateFormatTest} from '../utils/DateUtils'
+import {dateFormatTest} from '../utils/DateCommonUtils'
 const { TextArea } = Input;
 const app = props => {
     const database = props.database;

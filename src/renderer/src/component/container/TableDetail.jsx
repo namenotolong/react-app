@@ -1,10 +1,14 @@
 import { Form, Popconfirm, Table, Typography, Input, Button, Space, InputNumber, DatePicker, ConfigProvider, TimePicker } from 'antd';
 import { useState } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
-import { dateFormatTest } from '../utils/DateUtils'
-import locale from 'antd/locale/zh_CN';
+import { dateFormatTest } from '../utils/DateCommonUtils'
+import locale from 'antd/es/date-picker/locale/zh_CN';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
+
+const dateFormat = 'YYYY-MM-DD';
+const dateUtilsFormat = 'YYYY-mm-dd'
+
 const EditableCell = ({
     editing,
     type,
@@ -21,12 +25,18 @@ const EditableCell = ({
         case 'long':
         case 'int':
         case 'int4':
-        case 'int8': inputNode = <InputNumber />; break;
+        case 'int8': {
+            if (record[title]) {
+                inputNode = <InputNumber defaultValue={record[title]} />
+            } else {
+                inputNode = <InputNumber />
+            }
+        } break;
         case 'date': {
             if (record[title]) {
-                inputNode = <DatePicker locale={locale} defaultValue={dayjs(dateFormatTest("YYYY-mm-dd", record[title]), 'YYYY-MM-DD')} />
+                inputNode = <DatePicker defaultValue={dayjs(dateFormatTest(dateUtilsFormat, record[title]), dateFormat)} />;
             } else {
-                inputNode = <DatePicker locale={locale} />
+                inputNode = <DatePicker />;
             }
         }; break;
         case 'datetime':
@@ -34,7 +44,9 @@ const EditableCell = ({
             {
                 if (record[title]) {
                     inputNode = (
-                        <DatePicker locale={locale} format="YYYY-MM-DD HH:mm:ss" defaultValue={dayjs(dateFormatTest("YYYY-mm-dd HH:MM:SS", record[title]), 'YYYY-MM-DD HH:mm:ss')}
+                        <DatePicker locale={locale}
+                            format="YYYY-MM-DD HH:mm:ss"
+                            defaultValue={dayjs(dateFormatTest("YYYY-mm-dd HH:MM:SS", record[title]), 'YYYY-MM-DD HH:mm:ss')}
                             showTime={{
                                 defaultValue: dayjs(dateFormatTest("HH:MM:SS", record[title]), 'HH:mm:ss'),
                             }}
@@ -42,7 +54,7 @@ const EditableCell = ({
                     )
                 } else {
                     inputNode = (
-                        <DatePicker locale={locale}  format="YYYY-MM-DD HH:mm:ss"
+                        <DatePicker locale={locale} format="YYYY-MM-DD HH:mm:ss"
                             showTime={{
                                 defaultValue: dayjs('00:00:00', 'HH:mm:ss'),
                             }}
@@ -61,7 +73,14 @@ const EditableCell = ({
                 )
             }
         }; break;
-        default: inputNode = <Input />; break
+        default: {
+            if (record && record[title]) {
+                inputNode = <Input defaultValue={record[title]} />
+            } else {
+                inputNode = <Input />
+            }
+
+        }; break
     }
     return (
         <td {...restProps}>
@@ -86,68 +105,9 @@ const App = props => {
     const [running, setRunning] = useState(false)
     const [condition, setCondition] = useState(false)
     const [conditionValue, setConditionValue] = useState("")
-    const edit = (record) => {
-        form.setFieldsValue(record);
-        setEditingKey(record._______key);
-    };
-    const cancel = record => {
-        setEditingKey('');
-        if (record._______commit_none) {
-            setData(data.filter(e => e._______key != record._______key));
-        }
-    };
-    const save = async (record) => {
-        if (record._______commit_none) {
-            //insert
-            const row = await form.validateFields();
-            console.log(row)
-        } else {
-            //update
-            try {
-                const row = await form.validateFields();
-                let sql = `update ${props.tableName} set `
-                for (const key in row) {
-                    if (Object.hasOwnProperty.call(row, key)) {
-                        const element = row[key];
-                        sql = sql + `${key} = '${element}', `
-                    }
-                }
-                sql = sql.substring(0, sql.lastIndexOf(","));
-                sql = sql + ' where ';
-                for (const key in record) {
-                    if (key === '_______key') {
-                        continue;
-                    }
-                    if (Object.hasOwnProperty.call(record, key)) {
-                        const element = record[key];
-                        sql = sql + `${key} = '${element}' and `
-                    }
-                }
-                sql = sql.substring(0, sql.lastIndexOf("and"));
-                console.log(sql)
-                setRunning(true)
-                const result = await window.database.executeSql(sql, props.params)
-                console.log(result)
-                setResult(result)
-                const index = data.findIndex((item) => item._______key === record._______key);
-                row._______key = record._______key;
-                for (const key in row) {
-                    if (Object.hasOwnProperty.call(row, key)) {
-                        const element = row[key];
-                        data[index][key] = element
-                    }
-                }
-                setData(data);
-                setEditingKey('');
-            } catch (errInfo) {
-                console.log('Validate Failed:', errInfo);
-            }
-        }
-        setRunning(false)
-    };
-    const handleDelete = async row => {
-        setData(data.filter(e => e._______key != row._______key));
-        let sql = `delete from ${props.tableName} limit 1`
+    const columnTypeMap = new Map()
+    for (const iterator of props.tableDetail.columns) {
+        columnTypeMap.set(iterator.dataIndex, iterator.type)
     }
     const columns = [
         ...props.tableDetail.columns,
@@ -218,6 +178,97 @@ const App = props => {
             }),
         };
     });
+
+    const edit = (record) => {
+        // form.setFieldsValue(record);
+        setEditingKey(record._______key);
+    };
+    const cancel = record => {
+        setEditingKey('');
+        if (record._______commit_none) {
+            setData(data.filter(e => e._______key != record._______key));
+        }
+    };
+    const save = async (record) => {
+        const row = await form.validateFields();
+        console.log(row)
+        console.log(columnTypeMap)
+        let temp = {...row}
+        for (const key in temp) {
+            if (Object.hasOwnProperty.call(temp, key)) {
+                const element = temp[key];
+                console.log(key + ":" + element + ":" + columnTypeMap.get(key))
+            }
+        }
+        // for (const key in temp) {
+        //     if (Object.hasOwnProperty.call(temp, key)) {
+        //         const element = temp[key];
+        //         const type = columnTypeMap.get(key).toLowerCase()
+        //         let res;
+        //         switch (type) {
+        //             case 'date': res = dayjs(element, 'YYYY-MM-DD');break
+        //             case 'datetime':
+        //             case 'timestamp': res = dayjs(element, 'YYYY-MM-DD HH:mm:ss');break;
+        //             case 'time': res = dayjs(element, 'HH:mm:ss');break;
+        //             default: res = element;
+        //         }
+        //         console.log(key + ":" + element + ":" + columnTypeMap.get(key) + ":" + res)
+        //     }
+        // }
+        return
+        if (record._______commit_none) {
+            //insert
+            const row = await form.validateFields();
+            console.log(row)
+        } else {
+            //update
+            try {
+                const row = await form.validateFields();
+                let sql = `update ${props.tableName} set `
+                for (const key in row) {
+                    if (Object.hasOwnProperty.call(row, key)) {
+                        const element = row[key];
+                        sql = sql + `${key} = '${element}', `
+                    }
+                }
+                sql = sql.substring(0, sql.lastIndexOf(","));
+                sql = sql + ' where ';
+                for (const key in record) {
+                    if (key === '_______key') {
+                        continue;
+                    }
+                    if (Object.hasOwnProperty.call(record, key)) {
+                        const element = record[key];
+                        sql = sql + `${key} = '${element}' and `
+                    }
+                }
+                sql = sql.substring(0, sql.lastIndexOf("and"));
+                console.log(sql)
+                setRunning(true)
+                const result = await window.database.executeSql(sql, props.params)
+                console.log(result)
+                setResult(result)
+                const index = data.findIndex((item) => item._______key === record._______key);
+                row._______key = record._______key;
+                for (const key in row) {
+                    if (Object.hasOwnProperty.call(row, key)) {
+                        const element = row[key];
+                        data[index][key] = element
+                    }
+                }
+                setData(data);
+                setEditingKey('');
+            } catch (errInfo) {
+                console.log('Validate Failed:', errInfo);
+            }
+        }
+        setRunning(false)
+    };
+    const handleDelete = async row => {
+        setData(data.filter(e => e._______key != row._______key));
+        let sql = `delete from ${props.tableName} limit 1`
+    }
+    
 
     function processResult(result) {
         let count = 1
@@ -296,7 +347,9 @@ const App = props => {
             </div>
             <div style={{ marginTop: 5 }}>
                 <Form form={form}
-                    component={false}>
+                    component={false}
+
+                >
                     <Table
                         components={{
                             body: {

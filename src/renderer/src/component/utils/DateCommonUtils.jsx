@@ -22,4 +22,4 @@ function dateFormatTest(fmt, date) {
     return fmt;
 }
 
-export {dateFormatTest}
+export { dateFormatTest }
