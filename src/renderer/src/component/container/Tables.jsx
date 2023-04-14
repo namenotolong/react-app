@@ -52,13 +52,13 @@ const App = props => {
                     <FolderOpenOutlined /> 打开表
                 </Button>
                 {str}
-                <Button disabled={!focurs} onClick={() => props.handleHeaderButtonClickEvent('desgin', clickTable.name, props.params)}>
+                {/* <Button disabled={!focurs} onClick={() => props.handleHeaderButtonClickEvent('desgin', clickTable.name, props.params)}>
                     <FormOutlined /> 设计表
                 </Button>
                 {str}
                 <Button onClick={() => props.handleHeaderButtonClickEvent('create', clickTable.name, props.params)}>
                     <PlusSquareOutlined /> 新建表
-                </Button>
+                </Button> */}
                 {str}
                 <Button disabled={!focurs} onClick={() => props.handleHeaderButtonClickEvent('query', clickTable.name, props.params)}>
                     <TableOutlined /> 查询

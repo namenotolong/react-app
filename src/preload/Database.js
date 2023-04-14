@@ -31,6 +31,9 @@ class DatabaseConn {
     async showTables() {
         throw new Error("Method 'fetchTables' must be implemented");
     }
+    async executeParams(sql, params) {
+        throw new Error("Method 'executeParams' must be implemented");
+    }
 }
 
 class Result {
@@ -123,6 +126,19 @@ class ConnPostgreSQL extends DatabaseConn {
             });
         });
     }
+
+    async executeParams(sql, params) {
+        return await new Promise((resolve, reject) => {
+            this.client.query(sql, params, (err, res) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve("Changed: " + res.rowCount)
+                }
+            });
+        });
+    }
+
 }
 
 class ConnMySQL extends ConnPostgreSQL {
@@ -184,6 +200,18 @@ class ConnMySQL extends ConnPostgreSQL {
                     reject(error);
                 } else {
                     resolve(results.map(e => e[Object.keys(e)[0]]))
+                }
+            });
+        });
+    }
+
+    async executeParams(sql, params) {
+        return await new Promise((resolve, reject) => {
+            this.connection.query(sql, params, (error, results, fields) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(results.message);
                 }
             });
         });
@@ -257,4 +285,11 @@ async function showTables(connParams) {
     return result;
 }
 
-export { fetchData, fetchTotalConns, showDatabases, showTables, executeSql }
+async function executeParams(sql, params, connParams) {
+    let databaseConn = createConnection(connParams);
+    const result = await databaseConn.executeParams(sql, params);
+    databaseConn.disconnect();
+    return result;
+}
+
+export { fetchData, fetchTotalConns, showDatabases, showTables, executeSql, executeParams}

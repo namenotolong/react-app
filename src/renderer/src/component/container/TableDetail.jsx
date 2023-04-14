@@ -8,6 +8,21 @@ const dateFormat = 'YYYY-MM-DD';
 const dateUtilsFormat = 'YYYY-mm-dd'
 const datetimeUtilsFormat = 'YYYY-mm-dd HH:MM:SS'
 
+let left_str, right_str;
+left_str = right_str = ''
+
+function getSpaceStr(columnName, index, type) {
+    type = type.toLowerCase();
+    let res;
+    switch (type) {
+        case 'mysql': res = '?'; break;
+        case 'postgresql': res = `\$${index}`; break;
+        case 'oracle': res = `:${index}`; break;
+        case 'sqlserver': res = `@${columnName}`; break;
+        default: res = '?'; break;
+    }
+    return res;
+}
 
 const EditableCell = ({
     editing,
@@ -64,6 +79,25 @@ const EditableCell = ({
     );
 };
 const App = props => {
+    const type = props.params.type.toLowerCase();
+    switch (type) {
+        case 'mariadb':
+        case 'mysql': {
+            left_str = '`';
+            right_str = '`'
+        }; break;
+        case 'oracle':
+        case 'sqlite':
+        case 'postgresql': {
+            left_str = '"';
+            right_str = '"';
+        }; break;
+        case 'sqlserver': {
+            left_str = '[';
+            right_str = ']';
+        }; break;
+    }
+
     const [form] = Form.useForm();
     const [data, setData] = useState(props.tableDetail.data);
     const [editingKey, setEditingKey] = useState('');
@@ -129,7 +163,13 @@ const App = props => {
                 case "date": res = dateFormatTest("YYYY-mm-dd", text); break;
                 case "datetime": res = dateFormatTest("YYYY-mm-dd HH:MM:SS", text); break;
                 case "timestamp": res = dateFormatTest("YYYY-mm-dd HH:MM:SS", text); break;
-                // case 'time': res = dateFormatTest("HH:MM:SS", text); break;
+                case 'time': {
+                    if (typeof text === 'string') {
+                        res = text
+                    } else {
+                        res = dayjs(text).format('HH:mm:ss')
+                    }
+                }; break;
                 default: res = text + ""
             }
             return res;
@@ -151,6 +191,10 @@ const App = props => {
         for (const key in temp) {
             if (Object.hasOwnProperty.call(temp, key) && columnTypeMap.has(key)) {
                 const element = temp[key];
+                if (typeof element === 'undefined' || element === null) {
+                    temp[key] = null;
+                    continue;
+                }
                 const type = columnTypeMap.get(key).toLowerCase()
                 let res;
                 switch (type) {
@@ -173,72 +217,117 @@ const App = props => {
         }
     };
     const save = async (record) => {
-        const row = await form.validateFields();
-
-        let temp = { ...row }
-        for (const key in temp) {
-            if (Object.hasOwnProperty.call(temp, key) && columnTypeMap.has(key)) {
-                const element = temp[key];
-                const type = columnTypeMap.get(key).toLowerCase()
-                let res;
-                switch (type) {
-                    case 'date': res = dayjs(element).format('YYYY-MM-DD'); break
-                    case 'datetime':
-                    case 'timestamp': res = dayjs(element).format('YYYY-MM-DD HH:mm:ss'); break;
-                    case 'time': res = dayjs(element).format('HH:mm:ss'); break;
-                    default: res = element;
-                }
-                console.log(key + ":" + element + ":" + columnTypeMap.get(key) + ":" + res)
-            }
-        }
-        return
-        if (record._______commit_none) {
-            //insert
+        try {
             const row = await form.validateFields();
-            console.log(row)
-        } else {
-            //update
-            try {
-                const row = await form.validateFields();
-                let sql = `update ${props.tableName} set `
-                for (const key in row) {
-                    if (Object.hasOwnProperty.call(row, key)) {
-                        const element = row[key];
-                        sql = sql + `${key} = '${element}', `
-                    }
-                }
-                sql = sql.substring(0, sql.lastIndexOf(","));
-                sql = sql + ' where ';
-                for (const key in record) {
-                    if (key === '_______key') {
+            //将row中undefined字段设置为null
+            //let temp = { ...row }
+            let map = new Map()
+            for (const key in row) {
+                if (Object.hasOwnProperty.call(row, key) && columnTypeMap.has(key)) {
+                    let element = row[key];
+                    if (typeof element === 'undefined' || element === null) {
+                        row[key] = null;
+                        map.set(key, null);
                         continue;
                     }
-                    if (Object.hasOwnProperty.call(record, key)) {
-                        const element = record[key];
-                        sql = sql + `${key} = '${element}' and `
+                    const type = columnTypeMap.get(key).toLowerCase()
+                    let res;
+                    switch (type) {
+                        case 'date': res = dayjs(element).format('YYYY-MM-DD'); break
+                        case 'datetime':
+                        case 'timestamp': res = dayjs(element).format('YYYY-MM-DD HH:mm:ss'); break;
+                        case 'time': res = dayjs(element).format('HH:mm:ss'); break;
+                        default: res = element;
                     }
+                    map.set(key, res)
                 }
-                sql = sql.substring(0, sql.lastIndexOf("and"));
-                console.log(sql)
-                setRunning(true)
-                const result = await window.database.executeSql(sql, props.params)
-                console.log(result)
-                setResult(result)
-                const index = data.findIndex((item) => item._______key === record._______key);
-                row._______key = record._______key;
-                for (const key in row) {
-                    if (Object.hasOwnProperty.call(row, key)) {
-                        const element = row[key];
-                        data[index][key] = element
-                    }
-                }
-                setData(data);
-                setEditingKey('');
-            } catch (errInfo) {
-                console.log('Validate Failed:', errInfo);
             }
+
+            let preMap = new Map()
+            for (const key in record) {
+                if (Object.hasOwnProperty.call(record, key) && columnTypeMap.has(key)) {
+                    let element = record[key];
+                    if (typeof element === 'undefined' || element === null) {
+                        preMap.set(key, null);
+                        continue;
+                    }
+                    const type = columnTypeMap.get(key).toLowerCase()
+                    let res;
+                    switch (type) {
+                        case 'date': res = dayjs(element).format('YYYY-MM-DD'); break
+                        case 'datetime':
+                        case 'timestamp': res = dayjs(element).format('YYYY-MM-DD HH:mm:ss'); break;
+                        case 'time': {
+                            if (typeof element === 'string') {
+                                res = element;
+                            } else {
+                                res = dayjs(element).format('HH:mm:ss')
+                            }
+                        }; break;
+                        default: res = element;
+                    }
+                    preMap.set(key, res)
+                }
+            }
+            let keys = [];
+            let values = []
+            let updateArr = []
+            let spaceArr = []
+            let count = 1;
+            for (const iterator of map) {
+                keys.push(`${left_str}${iterator[0]}${right_str}`)
+                values.push(iterator[1])
+
+                let seprator = getSpaceStr(iterator[0], count, type)
+                spaceArr.push(seprator)
+                updateArr.push(`${left_str}${iterator[0]}${right_str} = ${seprator}`)
+                count += 1;
+            }
+
+            let sql;
+            if (record._______commit_none) {
+                sql = `insert into ${left_str}${props.tableName}${right_str}(${keys.join(',')}) values(${spaceArr.join(',')})`
+            } else {
+                let whereArr = []
+                for (const key in record) {
+                    if (Object.hasOwnProperty.call(record, key) && columnTypeMap.has(key)) {
+                        if (record[key] === null) {
+                            whereArr.push(`${left_str}${key}${right_str} IS NULL`)
+                        } else {
+                            let seprator = getSpaceStr(key, count, type)
+                            whereArr.push(`${left_str}${key}${right_str} = ${seprator}`)
+                            values.push(preMap.get(key))
+                            count += 1;
+                        }
+                    }
+                }
+                sql = `update ${left_str}${props.tableName}${right_str} set ${updateArr.join(',')} where ${whereArr.join(' and ')}`
+                if (type === 'mysql') {
+                    sql += ' limit 1'
+                }
+            }
+            console.log(sql)
+            console.log(values)
+
+            setRunning(true)
+            const result = await window.database.executeParams(sql, values, props.params)
+            setResult(result)
+            const index = data.findIndex((item) => item._______key === record._______key);
+            row._______key = record._______key;
+            row._______commit_none = false;
+            for (const key in row) {
+                if (Object.hasOwnProperty.call(row, key)) {
+                    const element = row[key];
+                    data[index][key] = element
+                }
+            }
+            setData(data);
+            setEditingKey('');
+        } catch (err) {
+            console.log('err:', err);
         }
         setRunning(false)
+        return
     };
     const handleDelete = async row => {
         setData(data.filter(e => e._______key != row._______key));

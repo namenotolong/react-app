@@ -2,3 +2,4 @@ UPDATE `test`.`test_date_1` SET `id` = 1, `birth` = '2023-04-26', `date_time` = 
 
 
 INSERT INTO `test`.`test_date_1`(`id`, `birth`, `date_time`, `timestamp112`, `string1`, `test1`) VALUES (1, '2023-04-11', '2023-04-11 22:34:46', '2023-04-12 15:05:20', '123123', '23:05:17');
+UPDATE `test`.`people` SET `id` = 123, `name` = NULL WHERE `id` IS NULL AND `name` IS NULL LIMIT 1;

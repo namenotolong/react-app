@@ -1,20 +1,29 @@
-function dateFormat(fmt, date) {
-    let ret;
-    const opt = {
-        "Y+": date.getFullYear().toString(),        // 年
-        "m+": (date.getMonth() + 1).toString(),     // 月
-        "d+": date.getDate().toString(),            // 日
-        "H+": date.getHours().toString(),           // 时
-        "M+": date.getMinutes().toString(),         // 分
-        "S+": date.getSeconds().toString()          // 秒
-        // 有其他格式化字符需求可以继续添加，必须转化成字符串
-    };
-    for (let k in opt) {
-        ret = new RegExp("(" + k + ")").exec(fmt);
-        if (ret) {
-            fmt = fmt.replace(ret[1], (ret[1].length == 1) ? (opt[k]) : (opt[k].padStart(ret[1].length, "0")))
-        };
-    };
-    return fmt;
-}
-console.log(dateFormat("YYYY-mm-dd", new Date()))
+const t = "John's Smith";
+
+
+function escapeString(str) {
+    return str.replace(/[\0\x08\x09\x1a\n\r"'\\\%]/g, function (char) {
+      switch (char) {
+        case '\0':
+          return '\\0';
+        case '\x08':
+          return '\\b';
+        case '\x09':
+          return '\\t';
+        case '\x1a':
+          return '\\z';
+        case '\n':
+          return '\\n';
+        case '\r':
+          return '\\r';
+        case '"':
+        case "'":
+        case '\\':
+        case '%':
+          return '\\' + char; // 使用反斜杠进行转义
+        default:
+          return char;
+      }
+    });
+  }
+  console.log(escapeString(t))
