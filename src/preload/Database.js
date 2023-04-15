@@ -85,7 +85,11 @@ class ConnPostgreSQL extends DatabaseConn {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve("Changed: " + res.rowCount)
+                    if (res.command === "SELECT") {
+                        resolve(new Result(ParseFieldInfo.parsePostgreSQL(res.fields), res.rows));
+                    } else {
+                        resolve("Changed: " + res.rowCount)
+                    }
                 }
             });
         });
@@ -163,7 +167,11 @@ class ConnMySQL extends ConnPostgreSQL {
                 if (error) {
                     reject(error);
                 } else {
-                    resolve(results.message);
+                    if (Object.hasOwnProperty.call(results, 'message')) {
+                        resolve(results.message);
+                    } else {
+                        resolve(new Result(ParseFieldInfo.parseMySQL(fields), results));
+                    }
                 }
             });
         });
@@ -238,7 +246,6 @@ function createConnection(connParams) {
 }
 
 async function fetchData(sql, connParams) {
-    await sleep(2000);
     let databaseConn = createConnection(connParams);
     const result = await databaseConn.query(sql);
     databaseConn.disconnect();
@@ -246,7 +253,6 @@ async function fetchData(sql, connParams) {
 }
 
 async function executeSql(sql, connParams) {
-    await sleep(2000);
     let databaseConn = createConnection(connParams);
     const result = await databaseConn.run(sql);
     databaseConn.disconnect();
@@ -285,7 +291,6 @@ async function fetchTotalConns() {
 }
 
 async function showTables(connParams) {
-    await sleep(2000);
     let databaseConn = createConnection(connParams);
     const result = await databaseConn.showTables();
     databaseConn.disconnect();
@@ -293,7 +298,6 @@ async function showTables(connParams) {
 }
 
 async function executeParams(sql, params, connParams) {
-    await sleep(2000);
     let databaseConn = createConnection(connParams);
     const result = await databaseConn.executeParams(sql, params);
     databaseConn.disconnect();
