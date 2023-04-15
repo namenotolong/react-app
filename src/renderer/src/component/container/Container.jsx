@@ -38,12 +38,12 @@ export default function App() {
             setActiveKey(newTabName);
         } else {
             try {
-                const data = await window.database.showTables(e);
+                //const data = await window.database.showTables(e);
                 const obj = [
                     ...items,
                     {
                         label: e.database + '@tables',
-                        children: <Tables data={data} params={e} handleHeaderButtonClickEvent={handleHeaderButtonClickEvent} />,
+                        children: <Tables params={e} handleHeaderButtonClickEvent={handleHeaderButtonClickEvent} />,
                         key: newTabName,
                     },
                 ]

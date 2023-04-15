@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
 import { dateFormatTest } from '../utils/DateCommonUtils'
 import dayjs from 'dayjs';
-import TestApp from './test'
 
 const dateFormat = 'YYYY-MM-DD';
 const dateUtilsFormat = 'YYYY-mm-dd'
@@ -459,7 +458,6 @@ const App = props => {
             <div style={{ marginTop: 20, marginLeft: 5 }}>
                 {running ? (<LoadingOutlined />) : (result)}
             </div>
-            <TestApp></TestApp>
         </div>
     );
 };

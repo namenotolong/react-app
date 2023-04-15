@@ -254,7 +254,6 @@ async function executeSql(sql, connParams) {
 }
 
 async function showDatabases(connParams) {
-    await sleep(2000);
     let databaseConn = createConnection(connParams);
     const result = await databaseConn.listDatabases();
     databaseConn.disconnect();
@@ -262,7 +261,6 @@ async function showDatabases(connParams) {
 }
 
 async function fetchTotalConns() {
-    await sleep(2000);
     return new Promise((resolve, reject) => {
         const list = [
             {

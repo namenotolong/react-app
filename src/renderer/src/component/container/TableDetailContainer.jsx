@@ -33,15 +33,17 @@ const App = props => {
                     setTableDetail(result);
                     setQueryError(false)
                     setErrorMsg('')
+                    setLoading(true)
+
                 })
                 .catch(err => {
                     setQueryError(true)
                     setErrorMsg(err.message)
                     setTableDetail(null)
                     message.error(err.message)
+                    setLoading(true)
                 })
         }
-        setLoading(true)
     }
     useEffect(() => {
         init()
