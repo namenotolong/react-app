@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Select, Space, Button, Input, Table, Spin } from 'antd';
+import { Select, Space, Button, Input, Table, Spin, message } from 'antd';
 import { CaretRightOutlined } from '@ant-design/icons';
 import {dateFormatTest} from '../utils/DateCommonUtils'
 const { TextArea } = Input;
@@ -35,11 +35,11 @@ const app = props => {
                 }
             }).catch(e => {
                 console.log(e)
+                message.error(e.message)
             })
         setInit(true)
     }
     async function querySql() {
-        console.log(123)
         if (!selectedItem || !textValue) {
             return
         }
@@ -86,6 +86,7 @@ const app = props => {
                 setErrorMsg(err.message)
                 setResult(null)
                 setLoading(false)
+                message.error(err.message)
             })
     }
     return (

@@ -1,8 +1,9 @@
-import { Form, Popconfirm, Table, Typography, Input, Button, Space, InputNumber, DatePicker, ConfigProvider, TimePicker } from 'antd';
+import { Form, Popconfirm, Table, Typography, Input, Button, Space, InputNumber, DatePicker, message, TimePicker } from 'antd';
 import { useState } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
 import { dateFormatTest } from '../utils/DateCommonUtils'
 import dayjs from 'dayjs';
+import TestApp from './test'
 
 const dateFormat = 'YYYY-MM-DD';
 const dateUtilsFormat = 'YYYY-mm-dd'
@@ -22,6 +23,48 @@ function getSpaceStr(columnName, index, type) {
         default: res = '?'; break;
     }
     return res;
+}
+
+function getWhereObj(record, columnTypeMap, count, databaseType) {
+    let whereArr = []
+    let values = []
+    for (const key in record) {
+        if (Object.hasOwnProperty.call(record, key) && columnTypeMap.has(key)) {
+            if (record[key] === null) {
+                whereArr.push(`${left_str}${key}${right_str} IS NULL`)
+            } else {
+                let seprator = getSpaceStr(key, count, databaseType)
+                whereArr.push(`${left_str}${key}${right_str} = ${seprator}`)
+                count += 1;
+
+                const type = columnTypeMap.get(key).toLowerCase()
+                const element = record[key]
+                if (typeof element === 'undefined' || element === null) {
+                    values.push(null)
+                    continue;
+                }
+                let res;
+                switch (type) {
+                    case 'date': res = dayjs(element).format('YYYY-MM-DD'); break
+                    case 'datetime':
+                    case 'timestamp': res = dayjs(element).format('YYYY-MM-DD HH:mm:ss'); break;
+                    case 'time': {
+                        if (typeof element === 'string') {
+                            res = element;
+                        } else {
+                            res = dayjs(element).format('HH:mm:ss')
+                        }
+                    }; break;
+                    default: res = element;
+                }
+                values.push(res)
+            }
+        }
+    }
+    return {
+        'values': values,
+        'whereArr': whereArr
+    }
 }
 
 const EditableCell = ({
@@ -243,32 +286,6 @@ const App = props => {
                 }
             }
 
-            let preMap = new Map()
-            for (const key in record) {
-                if (Object.hasOwnProperty.call(record, key) && columnTypeMap.has(key)) {
-                    let element = record[key];
-                    if (typeof element === 'undefined' || element === null) {
-                        preMap.set(key, null);
-                        continue;
-                    }
-                    const type = columnTypeMap.get(key).toLowerCase()
-                    let res;
-                    switch (type) {
-                        case 'date': res = dayjs(element).format('YYYY-MM-DD'); break
-                        case 'datetime':
-                        case 'timestamp': res = dayjs(element).format('YYYY-MM-DD HH:mm:ss'); break;
-                        case 'time': {
-                            if (typeof element === 'string') {
-                                res = element;
-                            } else {
-                                res = dayjs(element).format('HH:mm:ss')
-                            }
-                        }; break;
-                        default: res = element;
-                    }
-                    preMap.set(key, res)
-                }
-            }
             let keys = [];
             let values = []
             let updateArr = []
@@ -288,27 +305,15 @@ const App = props => {
             if (record._______commit_none) {
                 sql = `insert into ${left_str}${props.tableName}${right_str}(${keys.join(',')}) values(${spaceArr.join(',')})`
             } else {
-                let whereArr = []
-                for (const key in record) {
-                    if (Object.hasOwnProperty.call(record, key) && columnTypeMap.has(key)) {
-                        if (record[key] === null) {
-                            whereArr.push(`${left_str}${key}${right_str} IS NULL`)
-                        } else {
-                            let seprator = getSpaceStr(key, count, type)
-                            whereArr.push(`${left_str}${key}${right_str} = ${seprator}`)
-                            values.push(preMap.get(key))
-                            count += 1;
-                        }
-                    }
-                }
+                const resultWhere = getWhereObj(record, columnTypeMap, count, type)
+                let whereArr = resultWhere.whereArr
+                values = [...values, ...resultWhere.values]
+
                 sql = `update ${left_str}${props.tableName}${right_str} set ${updateArr.join(',')} where ${whereArr.join(' and ')}`
                 if (type === 'mysql') {
                     sql += ' limit 1'
                 }
             }
-            console.log(sql)
-            console.log(values)
-
             setRunning(true)
             const result = await window.database.executeParams(sql, values, props.params)
             setResult(result)
@@ -325,13 +330,30 @@ const App = props => {
             setEditingKey('');
         } catch (err) {
             console.log('err:', err);
+            message.error(err.message)
         }
         setRunning(false)
         return
     };
     const handleDelete = async row => {
-        setData(data.filter(e => e._______key != row._______key));
-        let sql = `delete from ${props.tableName} limit 1`
+        try {
+            const resultWhere = getWhereObj(row, columnTypeMap, 1, type)
+            let whereArr = resultWhere.whereArr
+            let values = resultWhere.values
+            let sql = `delete from ${props.tableName} where ${whereArr.join(' and ')}`
+            if (type === 'mysql') {
+                sql += ' limit 1'
+            }
+            setRunning(true)
+            const result = await window.database.executeParams(sql, values, props.params)
+            setResult(result)
+            setData(data.filter(e => e._______key != row._______key));
+        } catch (error) {
+            console.log(error)
+            message.error(error.message)
+        } finally {
+            setRunning(false)
+        }
     }
 
 
@@ -360,6 +382,7 @@ const App = props => {
             setData(processResult(result))
         } catch (err) {
             console.log(`query happen error ${err}`)
+            message.error(err.message)
         }
         setRunning(false)
     }
@@ -371,6 +394,7 @@ const App = props => {
             setData(processResult(result))
         } catch (err) {
             console.log(`query happen error ${err}`)
+            message.error(err.message)
         }
         setRunning(false)
     }
@@ -435,6 +459,7 @@ const App = props => {
             <div style={{ marginTop: 20, marginLeft: 5 }}>
                 {running ? (<LoadingOutlined />) : (result)}
             </div>
+            <TestApp></TestApp>
         </div>
     );
 };

@@ -133,7 +133,11 @@ class ConnPostgreSQL extends DatabaseConn {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve("Changed: " + res.rowCount)
+                    if (Object.hasOwnProperty.call(res, 'rowCount')) {
+                        resolve("Changed: " + res.rowCount)
+                    } else {
+                        resolve()
+                    }
                 }
             });
         });
@@ -234,6 +238,7 @@ function createConnection(connParams) {
 }
 
 async function fetchData(sql, connParams) {
+    await sleep(2000);
     let databaseConn = createConnection(connParams);
     const result = await databaseConn.query(sql);
     databaseConn.disconnect();
@@ -241,6 +246,7 @@ async function fetchData(sql, connParams) {
 }
 
 async function executeSql(sql, connParams) {
+    await sleep(2000);
     let databaseConn = createConnection(connParams);
     const result = await databaseConn.run(sql);
     databaseConn.disconnect();
@@ -248,6 +254,7 @@ async function executeSql(sql, connParams) {
 }
 
 async function showDatabases(connParams) {
+    await sleep(2000);
     let databaseConn = createConnection(connParams);
     const result = await databaseConn.listDatabases();
     databaseConn.disconnect();
@@ -255,6 +262,7 @@ async function showDatabases(connParams) {
 }
 
 async function fetchTotalConns() {
+    await sleep(2000);
     return new Promise((resolve, reject) => {
         const list = [
             {
@@ -279,6 +287,7 @@ async function fetchTotalConns() {
 }
 
 async function showTables(connParams) {
+    await sleep(2000);
     let databaseConn = createConnection(connParams);
     const result = await databaseConn.showTables();
     databaseConn.disconnect();
@@ -286,10 +295,15 @@ async function showTables(connParams) {
 }
 
 async function executeParams(sql, params, connParams) {
+    await sleep(2000);
     let databaseConn = createConnection(connParams);
     const result = await databaseConn.executeParams(sql, params);
     databaseConn.disconnect();
     return result;
 }
 
-export { fetchData, fetchTotalConns, showDatabases, showTables, executeSql, executeParams}
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+export { fetchData, fetchTotalConns, showDatabases, showTables, executeSql, executeParams }

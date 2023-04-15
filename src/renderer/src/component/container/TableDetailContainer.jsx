@@ -1,4 +1,4 @@
-import { Spin } from 'antd';
+import { Spin, message } from 'antd';
 import { useState, useEffect } from 'react';
 import TableDetailApp from './TableDetail'
 // import TableDetailTest from './TableDetailCp'
@@ -38,6 +38,7 @@ const App = props => {
                     setQueryError(true)
                     setErrorMsg(err.message)
                     setTableDetail(null)
+                    message.error(err.message)
                 })
         }
         setLoading(true)
@@ -60,7 +61,6 @@ const App = props => {
                 ) : tableDetail ? (
                     <div style={{ marginTop: 2 }}>
                         <TableDetailApp tableDetail={tableDetail} tableName={props.tableName} params={props.params}></TableDetailApp>
-                        {/* <TableDetailTest tableDetail={tableDetail} tableName={props.tableName} params={props.params}></TableDetailTest> */}
                     </div>
                 ) : ''}
             </div>

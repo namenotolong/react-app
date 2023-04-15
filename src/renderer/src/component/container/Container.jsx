@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "../../css/container/container.css";
 import Left from './Left'
-import { Tabs } from 'antd';
+import { Tabs, message } from 'antd';
 import Tables from './Tables'
 import TableQuery from './TableQuery'
 import Test from './TableDetailContainer'
@@ -37,18 +37,22 @@ export default function App() {
         if (targetIndex > -1) {
             setActiveKey(newTabName);
         } else {
-            const data = await window.database.showTables(e);
-            const obj = [
-                ...items,
-                {
-                    label: e.database + '@tables',
-                    children: <Tables data={data} params={e} handleHeaderButtonClickEvent={handleHeaderButtonClickEvent} />,
-                    key: newTabName,
-                },
-            ]
-            setItems(obj);
-            window.constant.setTabs(obj)
-            setActiveKey(newTabName);
+            try {
+                const data = await window.database.showTables(e);
+                const obj = [
+                    ...items,
+                    {
+                        label: e.database + '@tables',
+                        children: <Tables data={data} params={e} handleHeaderButtonClickEvent={handleHeaderButtonClickEvent} />,
+                        key: newTabName,
+                    },
+                ]
+                setItems(obj);
+                window.constant.setTabs(obj)
+                setActiveKey(newTabName);
+            } catch (error) {
+                message.error(error.message)
+            }
         }
     }
     const onChange = (key) => {

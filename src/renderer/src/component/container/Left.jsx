@@ -1,5 +1,5 @@
-import { DownOutlined, DatabaseOutlined, ForkOutlined } from '@ant-design/icons';
-import { Spin } from 'antd';
+import { DownOutlined, DatabaseOutlined, ForkOutlined, LoadingOutlined } from '@ant-design/icons';
+import { Spin, message } from 'antd';
 import { Tree } from 'antd';
 import { useEffect, useState } from 'react';
 
@@ -41,22 +41,26 @@ const updateTreeData = (list, key, children) => {
 const App = props => {
     const [isLoading, setIsLoading] = useState(true);
     const [treeData, setTreeData] = useState(null);
+    const [loadingKeys, setLoadingKeys] = useState([]);
     useEffect(() => {
         initData().then(e => {
             setTreeData(data)
             setIsLoading(false)
         }).catch(e => {
             console.log(e)
+            message.error(e.message)
             setIsLoading(false)
         })
+
     }, []);
-    const onLoadData = (node) => {
+    const onLoadData = async (node) => {
         //根据key加载库
         return new Promise((resolve) => {
             if (node.children) {
                 resolve();
                 return;
             }
+            setLoadingKeys([...loadingKeys, node.key]);
             window.database.showDatabases(node)
                 .then(e => {
                     if (e && e.length > 0) {
@@ -73,8 +77,11 @@ const App = props => {
                             updateTreeData(origin, node.key, databases)
                         );
                     }
+                    setLoadingKeys(loadingKeys.filter((key) => key !== node.key));
                 }).catch(e => {
                     console.log(e)
+                    message.error(e.message)
+                    setLoadingKeys(loadingKeys.filter((key) => key !== node.key));
                 })
             resolve();
         });
@@ -86,6 +93,7 @@ const App = props => {
         }
     }
     return (<div>
+
         {
             isLoading ?
                 (
@@ -93,14 +101,20 @@ const App = props => {
                         <Spin />
                     </div>
                 ) :
-                (<Tree
-                    showIcon
-                    switcherIcon={<DownOutlined />}
-                    treeData={treeData}
-                    onClick={processTreeClick}
-                    loadData={onLoadData}
-                />)
+                (
+                    <Tree
+                        showIcon
+                        switcherIcon={<DownOutlined />}
+                        treeData={treeData}
+                        onClick={processTreeClick}
+                        loadData={onLoadData}
+                    />)
         }
+        {loadingKeys.length > 0 && (
+            <div style={{ textAlign: 'center' }}>
+                <Spin />
+            </div>
+        )}
     </div>)
 };
 export default App;

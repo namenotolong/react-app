@@ -1,6 +1,6 @@
-import { List } from 'antd';
+import { List, message } from 'antd';
 import { useState } from 'react';
-import { InsertRowAboveOutlined, PlusSquareOutlined, RedoOutlined, FolderOpenOutlined, FormOutlined, TableOutlined } from '@ant-design/icons';
+import { InsertRowAboveOutlined, RedoOutlined, FolderOpenOutlined, TableOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 
 const App = props => {
@@ -65,13 +65,19 @@ const App = props => {
                 </Button>
                 {str}
                 <Button onClick={async () => {
-                    const itemData = await window.database.showTables(props.params);
-                    if (itemData && itemData.length > 0) {
-                        setData(itemData.map((e, index) => {
-                            return { 'name': e, 'id': index };
-                        }))
-                    } else {
-                        setData([])
+                    try {
+                        const itemData = await window.database.showTables(props.params);
+                        if (itemData && itemData.length > 0) {
+                            setData(itemData.map((e, index) => {
+                                return { 'name': e, 'id': index };
+                            }))
+                        } else {
+                            setData([])
+                        }
+                    } catch (err) {
+                        message.error(err.message)
+                    } finally {
+
                     }
                 }}>
                     <RedoOutlined /> 刷新
