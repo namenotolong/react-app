@@ -153,10 +153,10 @@ const App = props => {
         columnTypeMap.set(iterator.dataIndex, iterator.type)
     }
     const columns = [
-        ...props.tableDetail.columns,
         {
             title: 'operation',
             dataIndex: 'operation',
+            width: 150,
             render: (_, record) => {
                 const editable = isEditing(record);
                 return editable ? (
@@ -189,6 +189,7 @@ const App = props => {
                 );
             },
         },
+        ...props.tableDetail.columns
     ];
     const mergedColumns = columns.map((col) => {
         if (!col.editable) {

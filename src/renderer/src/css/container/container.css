@@ -21,4 +21,6 @@
 
 .right {
     padding-top: 5x;
+    overflow-y: scroll;
+    max-height: 95%;
 }

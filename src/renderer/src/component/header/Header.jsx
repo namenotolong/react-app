@@ -5,7 +5,7 @@ const Header = () => (
   <div style={{marginBottom:10}}>
     <Space>
       <Connection></Connection>
-      <Query></Query>
+      {/* <Query></Query> */}
     </Space>
   </div>
 );

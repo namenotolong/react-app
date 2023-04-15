@@ -25,7 +25,7 @@ const Connection = () => (
         >
             <Button >
             <LinkOutlined />
-                连接
+                新建连接
             </Button>
         </Dropdown>
     </>

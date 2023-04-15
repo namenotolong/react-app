@@ -127,16 +127,16 @@ export default function App() {
                 <Left clickDatabase={clickDatabase} items={items}></Left>
             </div>
             <div className="drag-handle" onMouseDown={handleMouseDown} />
-            <div className="right" style={{ width: `calc(100% - ${leftWidth})` }}>
-                <Tabs
-                    hideAdd
-                    onChange={onChange}
-                    activeKey={activeKey}
-                    type="editable-card"
-                    onEdit={onEdit}
-                    items={items}
-                />
-            </div>
+            <div className="right" style={{ width: `calc(100% - ${leftWidth})`}}>
+            <Tabs
+                hideAdd
+                onChange={onChange}
+                activeKey={activeKey}
+                type="editable-card"
+                onEdit={onEdit}
+                items={items}
+            />
         </div>
+        </div >
     );
 }
