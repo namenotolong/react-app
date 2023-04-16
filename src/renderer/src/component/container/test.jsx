@@ -1,62 +1,51 @@
-import { Tree } from 'antd';
-import { useState } from 'react';
-const initTreeData = [
+import { DownOutlined, SmileOutlined } from '@ant-design/icons';
+import { Dropdown, Space } from 'antd';
+const items = [
   {
-    title: 'Expand to load',
-    key: '0',
-  },
-  {
-    title: 'Expand to load',
     key: '1',
+    label: (
+      <a target="_blank" rel="noopener noreferrer" href="https://www.antgroup.com">
+        1st menu item
+      </a>
+    ),
   },
   {
-    title: 'Tree Node',
     key: '2',
-    isLeaf: true,
+    label: (
+      <a target="_blank" rel="noopener noreferrer" href="https://www.aliyun.com">
+        2nd menu item (disabled)
+      </a>
+    ),
+    icon: <SmileOutlined />,
+    disabled: true,
+  },
+  {
+    key: '3',
+    label: (
+      <a target="_blank" rel="noopener noreferrer" href="https://www.luohanacademy.com">
+        3rd menu item (disabled)
+      </a>
+    ),
+    disabled: true,
+  },
+  {
+    key: '4',
+    danger: true,
+    label: 'a danger item',
   },
 ];
-
-// It's just a simple demo. You can use tree map to optimize update perf.
-const updateTreeData = (list, key, children) =>
-  list.map((node) => {
-    if (node.key === key) {
-      return {
-        ...node,
-        children,
-      };
-    }
-    if (node.children) {
-      return {
-        ...node,
-        children: updateTreeData(node.children, key, children),
-      };
-    }
-    return node;
-  });
-const App = () => {
-  const [treeData, setTreeData] = useState(initTreeData);
-  const onLoadData = ({ key, children }) =>
-    new Promise((resolve) => {
-      if (children) {
-        resolve();
-        return;
-      }
-      setTimeout(() => {
-        setTreeData((origin) =>
-          updateTreeData(origin, key, [
-            {
-              title: 'Child Node',
-              key: `${key}-0`,
-            },
-            {
-              title: 'Child Node',
-              key: `${key}-1`,
-            },
-          ]),
-        );
-        resolve();
-      }, 1000);
-    });
-  return <Tree loadData={onLoadData} treeData={treeData} />;
-};
+const App = () => (
+  <Dropdown
+    menu={{
+      items,
+    }}
+  >
+    <a onClick={(e) => e.preventDefault()}>
+      <Space>
+        Hover me
+        <DownOutlined />
+      </Space>
+    </a>
+  </Dropdown>
+);
 export default App;

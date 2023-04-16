@@ -3,9 +3,9 @@ import Container from './component/container/Container'
 function App() {
   return (
     <div>
-      <div>
+      {/* <div>
         <Header></Header>
-      </div>
+      </div> */}
       <div>
         <Container></Container>
       </div>

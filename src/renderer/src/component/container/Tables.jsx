@@ -1,4 +1,4 @@
-import { List, message, Spin } from 'antd';
+import { List, message, Spin, Space, Input } from 'antd';
 import { useEffect, useState } from 'react';
 import { InsertRowAboveOutlined, RedoOutlined, FolderOpenOutlined, TableOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
@@ -11,11 +11,16 @@ const App = props => {
     const [clickTable, setClickTable] = useState(null);
     const [data, setData] = useState([])
 
+    const [seachValue, setSearchValue] = useState()
+
     useEffect(() => {
         if (!inited) {
             let params = props.params;
             window.database.showTables(params).then(tables => {
-                setData(tables.map((e, index) => {
+                setData(
+                    tables
+                    .filter(e => !seachValue || !seachValue.trim() || e.includes(seachValue.trim()))
+                    .map((e, index) => {
                     return { 'name': e, 'id': index };
                 }))
                 setInited(true)
@@ -59,6 +64,9 @@ const App = props => {
         console.log(e)
     }
 
+    const handleSeach = () => {
+        setInited(false)
+    }
     return (
         <div>
             {!inited ?
@@ -70,29 +78,30 @@ const App = props => {
                 : (
                     <div>
                         <div style={{ marginLeft: 5 }}>
-                            <Button disabled={!focurs} onClick={() => {
-                                props.handleHeaderButtonClickEvent('open', clickTable.name, props.params)
-                            }}>
-                                <FolderOpenOutlined /> 打开表
-                            </Button>
-                            {str}
-                            {/* <Button disabled={!focurs} onClick={() => props.handleHeaderButtonClickEvent('desgin', clickTable.name, props.params)}>
+                            <Space>
+                                <Button disabled={!focurs} onClick={() => {
+                                    props.handleHeaderButtonClickEvent('open', clickTable.name, props.params)
+                                }}>
+                                    <FolderOpenOutlined /> 打开表
+                                </Button>
+                                {/* <Button disabled={!focurs} onClick={() => props.handleHeaderButtonClickEvent('desgin', clickTable.name, props.params)}>
                     <FormOutlined /> 设计表
                 </Button>
                 {str}
                 <Button onClick={() => props.handleHeaderButtonClickEvent('create', clickTable.name, props.params)}>
                     <PlusSquareOutlined /> 新建表
                 </Button> */}
-                            {str}
-                            <Button disabled={!focurs} onClick={() => props.handleHeaderButtonClickEvent('query', clickTable.name, props.params)}>
-                                <TableOutlined /> 查询
-                            </Button>
-                            {str}
-                            <Button onClick={async () => {
-                                setInited(false)
-                            }}>
-                                <RedoOutlined /> 刷新
-                            </Button>
+                                <Button disabled={!focurs} onClick={() => props.handleHeaderButtonClickEvent('query', clickTable.name, props.params)}>
+                                    <TableOutlined /> 查询
+                                </Button>
+                                <Button onClick={async () => {
+                                    setInited(false)
+                                }}>
+                                    <RedoOutlined /> 刷新
+                                </Button>
+                                <Input placeholder="please……" value={seachValue} onChange={e => setSearchValue(e.target.value)} />
+                                <Button type='primary' onClick={handleSeach}>搜索</Button>
+                            </Space>
                         </div>
                         <div style={{ display: 'flex', marginLeft: 5, marginTop: 10 }}>
                             {pageData.map((item, index) => (

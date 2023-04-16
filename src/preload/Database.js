@@ -1,3 +1,4 @@
+import { setKey, getKey } from './StorageService'
 const pg = require('pg');
 const mysql = require('mysql');
 // 定义抽象类
@@ -268,25 +269,32 @@ async function showDatabases(connParams) {
 
 async function fetchTotalConns() {
     return new Promise((resolve, reject) => {
-        const list = [
-            {
-                name: 'localhost-postgres',
-                type: 'postgresql',
-                user: "postgres",
-                host: "master",
-                password: "Guan&*(123",
-                port: 5435,
-            },
-            {
-                name: 'localhost-mysql',
-                type: 'mysql',
-                user: "root",
-                host: "master",
-                password: "123456",
-                port: 3306,
-            }
-        ]
-        resolve(list);
+        const connArr = getKey('conns')
+        if (!connArr || connArr.length < 1) {
+            resolve([])
+        } else {
+            resolve(connArr)
+            return
+        }
+        // const list = [
+        //     {
+        //         name: 'localhost-postgres',
+        //         type: 'postgresql',
+        //         user: "postgres",
+        //         host: "master",
+        //         password: "Guan&*(123",
+        //         port: 5435,
+        //     },
+        //     {
+        //         name: 'localhost-mysql',
+        //         type: 'mysql',
+        //         user: "root",
+        //         host: "master",
+        //         password: "123456",
+        //         port: 3306,
+        //     }
+        // ]
+        // resolve(list);
     })
 }
 
@@ -308,4 +316,61 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export { fetchData, fetchTotalConns, showDatabases, showTables, executeSql, executeParams }
+function addConn(data) {
+    const connArr = getKey('conns')
+    if (!connArr || connArr.length < 1) {
+        setKey('conns', [data])
+    } else {
+        const index = connArr.findIndex(e => e.name === data.name)
+        console.log(index)
+        if (index > -1) {
+            throw new Error(`name:${data.name} connection is exists!`);
+        }
+        connArr.push(data);
+        setKey('conns', connArr)
+        return
+    }
+}
+
+function updateConn(data, preName) {
+    const connArr = getKey('conns')
+    if (!connArr || connArr.length < 1) {
+        new Error(`name:${preName} connection is not exists!`)
+    } else {
+        const index = connArr.findIndex(e => e.name === preName)
+        if (index < 0) {
+            throw new Error(`name:${data.name} connection is exists!`);
+        }
+        if (preName !== data.name) {
+            const next = connArr.findIndex(e => e.name === data.name)
+            if (next > -1) {
+                throw new Error(`name:${data.name} connection is exists!`);
+            }
+        }
+        let newArr = connArr.map(e => {
+            if (e.name === preName) {
+                return data;
+            } else {
+                return e;
+            }
+        })
+        setKey('conns', newArr)
+    }
+}
+
+function deleteConn(name) {
+    const connArr = getKey('conns')
+    if (!connArr || connArr.length < 1) {
+        throw new Error(`name:${name} connection is not exists!`)
+    } else {
+        const index = connArr.findIndex(e => e.name === name)
+        if (index < 0) {
+            resolve()
+            return
+        }
+        let newArr = connArr.filter(e => e.name !== name)
+        setKey('conns', newArr)
+    }
+}
+
+export { createConnection, fetchData, fetchTotalConns, showDatabases, showTables, executeSql, executeParams, addConn, updateConn, deleteConn }

@@ -1,6 +1,6 @@
-import { Form, Popconfirm, Table, Typography, Input, Button, Space, InputNumber, DatePicker, message, TimePicker } from 'antd';
+import { Form, Popconfirm, Table, Typography, Input, Button, Space, InputNumber, DatePicker, message, TimePicker, Select } from 'antd';
 import { useState } from 'react';
-import { LoadingOutlined } from '@ant-design/icons';
+import { LoadingOutlined, DeleteOutlined, EditOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { dateFormatTest } from '../utils/DateCommonUtils'
 import dayjs from 'dayjs';
 
@@ -148,6 +148,7 @@ const App = props => {
     const [running, setRunning] = useState(false)
     const [condition, setCondition] = useState(false)
     const [conditionValue, setConditionValue] = useState("")
+    const [limitValue, setLimitValue] = useState(100)
     const columnTypeMap = new Map()
     for (const iterator of props.tableDetail.columns) {
         columnTypeMap.set(iterator.dataIndex, iterator.type)
@@ -167,10 +168,10 @@ const App = props => {
                                 marginRight: 8,
                             }}
                         >
-                            Save
+                            <CheckOutlined />
                         </Typography.Link>
                         <Popconfirm title="Sure to cancel?" onConfirm={() => cancel(record)}>
-                            <a>Cancel</a>
+                            <CloseOutlined />
                         </Popconfirm>
                     </span>
                 ) : (
@@ -180,10 +181,10 @@ const App = props => {
                                 marginRight: 8,
                             }}
                             disabled={editingKey !== ''} onClick={() => edit(record)}>
-                            Edit
+                            <EditOutlined />
                         </Typography.Link>
                         <Popconfirm title="Sure to delete?" onConfirm={() => handleDelete(record)}>
-                            <a>Delete</a>
+                            <DeleteOutlined />
                         </Popconfirm>
                     </span>
                 );
@@ -377,6 +378,9 @@ const App = props => {
             } else {
                 sql = `select * from ${props.tableName}`
             }
+            if (limitValue !== -1 && limitValue > 0) {
+                sql += ' limit ' + limitValue;
+            }
             setRunning(true)
             const result = await window.database.fetchData(sql, props.params)
             setData(processResult(result))
@@ -390,6 +394,9 @@ const App = props => {
         try {
             setRunning(true)
             let sql = `select * from ${props.tableName}`
+            if (limitValue !== -1 && limitValue > 0) {
+                sql += ' limit ' + limitValue;
+            }
             const result = await window.database.fetchData(sql, props.params)
             setData(processResult(result))
         } catch (err) {
@@ -417,6 +424,33 @@ const App = props => {
                     <Button type='primary' onClick={addRow} disabled={editingKey}>添加数据</Button>
                     <Button type='primary' onClick={refresh}>刷新</Button>
                     <Button type='primary' onClick={e => setCondition(true)}>添加条件</Button>
+                    <Select
+                        style={{
+                            width: 150,
+                        }}
+                        onChange={e => {
+                            setLimitValue(e)
+                        }}
+                        value={limitValue}
+                        options={[
+                            {
+                                value: '100',
+                                label: '100 limit',
+                            },
+                            {
+                                value: '1000',
+                                label: '1000 limit',
+                            },
+                            {
+                                value: '10000',
+                                label: '10000 limit',
+                            },
+                            {
+                                value: '-1',
+                                label: '无 limit',
+                            },
+                        ]}
+                    />
                 </Space>
             </div>
 
