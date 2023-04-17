@@ -107,17 +107,20 @@ const App = props => {
     }
 
     const refreshNode = async (node) => {
-        let dataIrtem = await window.database.showDatabases(node);
-        const databases = dataIrtem.map(item => {
-            return {
-                title: item,
-                key: node.key + "_" + item,
-                icon: <DatabaseOutlined />,
-                isLeaf: true,
-                parent: node
-            }
-        })
-        node.children = databases
+        // let dataIrtem = await window.database.showDatabases(node);
+        // const databases = dataIrtem.map(item => {
+        //     return {
+        //         title: item,
+        //         key: node.key + "_" + item,
+        //         icon: <DatabaseOutlined />,
+        //         isLeaf: true,
+        //         parent: node
+        //     }
+        // })
+        // node.children = databases
+        setInited(false)
+        setLoadingKeys([])
+        init()
         setExpandedKeys(expandedKeys.filter(e => e !== node.key))
     }
     return (<div>
@@ -127,6 +130,7 @@ const App = props => {
                     <ModelInfo isoOpen={isCreateModalOpen} closeHandle={e => {
                         setIsCreateModalOpen(false)
                         setInited(false)
+                        setLoadingKeys([])
                         init()
                     }}></ModelInfo>
                 )
@@ -173,6 +177,7 @@ const App = props => {
                         loadData={onLoadData}
                         expandedKeys={expandedKeys}
                         onExpand={handleExpand}
+                        loadedKeys={loadingKeys}
                         titleRender={node => {
                             const menu = (
                                 <Menu onClick={async e => {
