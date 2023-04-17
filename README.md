@@ -1,4 +1,4 @@
-# my-electron-app
+# dataFinder
 
 An Electron application with React
 

@@ -61,6 +61,7 @@ const App = props => {
             setIsLoading(false)
             setInited(true)
         })
+        setInited(true)
     }
     init()
     const handleExpand = (expandedKeys) => {
@@ -120,7 +121,6 @@ const App = props => {
         // node.children = databases
         setInited(false)
         setLoadingKeys([])
-        init()
         setExpandedKeys(expandedKeys.filter(e => e !== node.key))
     }
     return (<div>
@@ -131,7 +131,6 @@ const App = props => {
                         setIsCreateModalOpen(false)
                         setInited(false)
                         setLoadingKeys([])
-                        init()
                     }}></ModelInfo>
                 )
                 :
@@ -154,7 +153,7 @@ const App = props => {
                     <ModelInfo edit='true' data={editNode} isoOpen={isModalOpen} closeHandle={e => {
                         setIsModalOpen(false)
                         setInited(false)
-                        init()
+                        // init()
                     }}></ModelInfo>
                 )
                 :

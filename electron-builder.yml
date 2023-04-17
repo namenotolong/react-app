@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: my-electron-app
+productName: dataFinder
 directories:
   buildResources: build
 files:
@@ -12,7 +12,7 @@ asarUnpack:
   - resources/**
 afterSign: build/notarize.js
 win:
-  executableName: my-electron-app
+  executableName: dataFinder
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

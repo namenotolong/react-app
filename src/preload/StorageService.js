@@ -1,8 +1,6 @@
 import path from 'path'
 const fs = require('fs')
 
-console.log(process.cwd())
-
 // 获取应用程序目录
 const appPath = process.cwd()
 
@@ -10,7 +8,17 @@ const appPath = process.cwd()
 const filePath = 'conn.json'
 
 // 文件绝对路径
-const absoluteFilePath = path.join(appPath, 'data', filePath)
+const absoluteFilePath = path.join(appPath, filePath)
+
+try {
+    // 检查文件是否存在
+    fs.accessSync(absoluteFilePath, fs.constants.F_OK);
+    console.log(`文件 ${absoluteFilePath} 已存在`);
+} catch (err) {
+    // 如果文件不存在，创建文件
+    fs.writeFileSync(absoluteFilePath, '');
+    console.log(`文件 ${absoluteFilePath} 创建成功`);
+}
 
 // 读取文件
 const data = fs.readFileSync(absoluteFilePath, 'utf-8')
